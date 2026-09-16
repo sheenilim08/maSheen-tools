@@ -4,8 +4,9 @@
 
 import sys
 import os
+import time
 
-from modules.sslabs import SslScanner
+from modules.ssllabs import SslScanner
 
 # Gracefully handle Windows dependencies if needed
 if os.name == 'nt':
@@ -90,9 +91,37 @@ def draw_menu(stdscr):
             return menu_items[current_row]
 
 def performScanning():
-    endpoint = input("Typein the endpiont you want to scan (e.g. vpn.myorg.com): ")
+    endpoint = input("Type in the endpiont you want to scan (e.g. vpn.myorg.com): ")
+
     scanner = SslScanner(endpoint)
-    scanner.startScan()
+
+    result = scanner.scanStart()
+    print("Scan is initiating.")
+    # time.sleep(15)
+
+    still_waiting = True
+    if (not result["success"]):
+        print(f"Scan failed. {result["message"]}" )
+        still_waiting = False
+
+    while (still_waiting):
+        if (result["success"]):
+            print(f"Scan status: {result["data"]["status"]}")
+
+            if (result["data"]["status"] == "READY"):
+                print("Scan is complete, here is the result.\n", result["data"])
+                still_waiting = False
+
+            if (result["data"]["status"] == "IN_PROGRESS"):
+                print("Scanning in progress, checking result again in 15 seconds.")
+                time.sleep(15)
+
+                result = scanner.scanStatus()
+                continue
+        else:
+            print("Scanning Failed")
+
+        still_waiting = False        
 
 
 def main():

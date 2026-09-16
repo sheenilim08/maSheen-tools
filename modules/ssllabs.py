@@ -14,7 +14,7 @@ class SslScanner:
             "startNew": "On"
         }
 
-        self.scanFetchResult(ssllabs_analyze_endpoint, query_params)
+        return self.scanFetchResult(ssllabs_analyze_endpoint, query_params)
 
     def scanStatus(self):
         query_params = {
@@ -22,12 +22,13 @@ class SslScanner:
             "all": "On"
         }
 
-        self.scanFetchResult(ssllabs_analyze_endpoint, query_params)
+        return self.scanFetchResult(ssllabs_analyze_endpoint, query_params)
 
-    def scanFetchResult(self, payload):
-        headers = {"Content-Type": "application/json"}
+    def scanFetchResult(self, url, query_params):
+        headers_param = {"Content-Type": "application/json"}
+        response = requests.get(url, params=query_params, headers=headers_param, timeout=10)
         try:
-            response = requests.post(ssllabs_analyze_endpoint, json=payload, headers=headers, timeout=10)
+            print(f"URL {response.url}")
             data = response.json()
 
             return {
@@ -35,8 +36,8 @@ class SslScanner:
                 "data": data
             }
         except requests.exceptions.RequestException as err:
-            msg = f"An error occurred during GET: {err}"
-            print(msg)
+            msg = f"An error occurred during POST: {err}"
+            print(msg, err)
 
             return {
                 "success": False,
