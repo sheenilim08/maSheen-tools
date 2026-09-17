@@ -37,7 +37,6 @@ def draw_menu(stdscr):
 
     menu_items = [
         "SSL Labs SSL Scanner",
-        "VirusTotal Scanner",
         "Exit"
     ]
     current_row = 0
