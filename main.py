@@ -90,6 +90,35 @@ def draw_menu(stdscr):
         elif key in [curses.KEY_ENTER, 10, 13]:
             return menu_items[current_row]
 
+def showScanResult(data):
+    headerIpAddress =  "IP Address"
+    headerGrade = "Grade Rating"
+    headerCertNames = "Cert Common Name"
+    headerTlsVersion = "TLS Version"
+
+    print(f"{headerIpAddress:<15} | {headerGrade:<12} | {headerCertNames:<30} | {headerTlsVersion:<10}")
+    for endpoint in data["endpoints"]:
+        certDetails = endpoint["details"]["cert"]
+        cert_common_names = certDetails["commonNames"][0]
+
+        for altName in certDetails["altNames"]:
+            cert_common_names += f", {altName}"
+
+        if len(cert_common_names) >=18:
+            cert_common_names = f"{cert_common_names[0,18]}..."
+
+        tlsVersion = ""
+        for index, protocol in enumerate(endpoint["details"]["protocols"]):
+            if index == 0:
+                tlsVersion = f"{protocol["name"]} {protocol["version"]}"
+            else:
+                tlsVersion += f", {protocol["name"]} {protocol["version"]}"
+
+        if (len(tlsVersion) >= 28):
+            tlsVersion = f"{tlsVersion[0,28]}..."
+
+        print(f"{endpoint["ipAddress"]:<15} | {endpoint["grade"]:<12} | {cert_common_names:<30} | {tlsVersion:<10}")
+
 def performScanning():
     endpoint = input("Type in the endpiont you want to scan (e.g. vpn.myorg.com): ")
 
@@ -97,7 +126,6 @@ def performScanning():
 
     result = scanner.scanStart()
     print("Scan is initiating.")
-    # time.sleep(15)
 
     still_waiting = True
     if (not result["success"]):
@@ -109,20 +137,19 @@ def performScanning():
             print(f"Scan status: {result["data"]["status"]}")
 
             if (result["data"]["status"] == "READY"):
-                print("Scan is complete, here is the result.\n", result["data"])
-                still_waiting = False
+                print("Scan is complete, here is the result.")
+                showScanResult(result["data"])
+                break;
 
             if (result["data"]["status"] == "IN_PROGRESS"):
-                print("Scanning in progress, checking result again in 15 seconds.")
-                time.sleep(15)
+                print("Scanning in progress, checking result again in 1 minute.")
+                time.sleep(60)
 
                 result = scanner.scanStatus()
                 continue
-        else:
-            print("Scanning Failed")
 
+        print("Scanning Failed")
         still_waiting = False        
-
 
 def main():
     choice = curses.wrapper(draw_menu)

@@ -36,7 +36,16 @@ class SslScanner:
                 "data": data
             }
         except requests.exceptions.RequestException as err:
-            msg = f"An error occurred during POST: {err}"
+            msg = f"An error occurred during GET: {err}"
+            print(msg, err)
+
+            return {
+                "success": False,
+                "message": msg
+            }
+
+        except requests.exceptions.HTTPSConnectionPool as err:
+            msg = f"An error occurred during GET: {err}"
             print(msg, err)
 
             return {
