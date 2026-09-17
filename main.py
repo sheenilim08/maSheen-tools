@@ -133,7 +133,6 @@ def showScanResult(data):
         zipped_lines = zip_longest(cert_lines, tls_lines, fillvalue="")
 
         for index, (cert_line, tls_line) in enumerate(zipped_lines):
-            # Print IP and Grade only on the first line of the wrapped row
             current_ip = endpoint["ipAddress"] if index == 0 else ""
             current_grade = endpoint["grade"] if index == 0 else ""
             
