@@ -6,6 +6,9 @@ import sys
 import os
 import time
 
+from itertools import zip_longest
+import textwrap
+
 from modules.ssllabs import SslScanner
 
 # Gracefully handle Windows dependencies if needed
@@ -96,7 +99,12 @@ def showScanResult(data):
     headerCertNames = "Cert Common Name"
     headerTlsVersion = "TLS Version"
 
-    print(f"{headerIpAddress:<15} | {headerGrade:<12} | {headerCertNames:<30} | {headerTlsVersion:<10}")
+    w_ip = 15
+    w_grade = 12
+    w_cert = 30
+    w_tls = 15 
+
+    print(f"{headerIpAddress:<{w_ip}} | {headerGrade:<{w_grade}} | {headerCertNames:<{w_cert}} | {headerTlsVersion:<{w_tls}}")
     for endpoint in data["endpoints"]:
         certDetails = endpoint["details"]["cert"]
         cert_common_names = certDetails["commonNames"][0]
@@ -104,8 +112,8 @@ def showScanResult(data):
         for altName in certDetails["altNames"]:
             cert_common_names += f", {altName}"
 
-        if len(cert_common_names) >=18:
-            cert_common_names = f"{cert_common_names[0,18]}..."
+        # if len(cert_common_names) >=18:
+        #     cert_common_names = f"{cert_common_names[0:18]}..."
 
         tlsVersion = ""
         for index, protocol in enumerate(endpoint["details"]["protocols"]):
@@ -114,10 +122,22 @@ def showScanResult(data):
             else:
                 tlsVersion += f", {protocol["name"]} {protocol["version"]}"
 
-        if (len(tlsVersion) >= 28):
-            tlsVersion = f"{tlsVersion[0,28]}..."
+        # if (len(tlsVersion) >= 28):
+        #     tlsVersion = f"{tlsVersion[0:28]}..."
 
-        print(f"{endpoint["ipAddress"]:<15} | {endpoint["grade"]:<12} | {cert_common_names:<30} | {tlsVersion:<10}")
+        # print(f"{endpoint["ipAddress"]:<15} | {endpoint["grade"]:<12} | {cert_common_names:<30} | {tlsVersion:<10}")
+
+        cert_lines = textwrap.wrap(cert_common_names, width=w_cert)
+        tls_lines = textwrap.wrap(tlsVersion, width=w_tls)
+
+        zipped_lines = zip_longest(cert_lines, tls_lines, fillvalue="")
+
+        for index, (cert_line, tls_line) in enumerate(zipped_lines):
+            # Print IP and Grade only on the first line of the wrapped row
+            current_ip = endpoint["ipAddress"] if index == 0 else ""
+            current_grade = endpoint["grade"] if index == 0 else ""
+            
+            print(f"{current_ip:<{w_ip}} | {current_grade:<{w_grade}} | {cert_line:<{w_cert}} | {tls_line:<{w_tls}}")
 
 def performScanning():
     endpoint = input("Type in the endpiont you want to scan (e.g. vpn.myorg.com): ")
